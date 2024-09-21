@@ -3,7 +3,7 @@ from tables import ip_table
 class DES:
     def text_to_bin(self, text):
         # Converte cada caractere da string em seu valor binário (8 bits para cada caractere)
-        return ''.join(format(ord(char), '08b' for char in text))
+        return ''.join(format(ord(char), '08b') for char in text)
 
     def text_to_binary_64bits(self, text):
         message_bin = self.text_to_bin(text)
@@ -49,16 +49,16 @@ class DES:
             subkeys.append(permute(key, key_schedule_table[i])) # Gerar subchaves a partir da chave principal
         return subkeys
 
-    def encrypt(self, block, key=''):
+    def encrypt(self, text, key=''):
         # Converte texto para blocos binários de 64 bits
         blocks = self.text_to_binary_64bits(text)
         print(blocks)
 
         # Permutação inicial
-        block = self.permute(block, ip_table)
+        text = self.permute(blocks, ip_table)
         
         # Dividir o bloco em metades
-        left, right = self.split_bits(block)
+        left, right = self.split_bits(text)
         
         # Gerar subchaves
         subkeys = self;generate_subkeys(key)
