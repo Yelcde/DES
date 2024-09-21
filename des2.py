@@ -26,21 +26,21 @@ class DES:
 
     def permute(self, blocks, table):
         # Função de permutação de bits baseado em uma tabela
-        # blocks_size = str(len(blocks))
-        # for i in blocks_size:
-        #     for j in range(len(table)):
-        #         blocks[i-1] = blocks
-        pass
+        blocks_size = len(blocks)
+        for i in range(blocks_size):
+            permutation = [None]*64
+            for j in range(len(table)):
+                permutation[table[j]-1] = blocks[i][j]
+            blocks[i] = permutation
+        return blocks
 
 
     def encrypt(self, text, key=''):
         # Converte texto para blocos binários de 64 bits
         blocks = self.text_to_binary_64bits(text)
-        print(blocks)
 
         # Permutação inicial
-        # text = self.permute(blocks, ip_table)
-        # print(text)
+        text = self.permute(blocks, ip_table)
         
         # # Dividir o bloco em metades
         # left, right = self.split_bits(text)
