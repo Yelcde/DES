@@ -2,12 +2,12 @@ from tables import ip_table
 
 
 class DES:
-    def text_to_bin(self, text):
+    def __text_to_bin(self, text):
         # Converte cada caractere em seu valor binário (8 bits para cada caractere)
         return ''.join(format(ord(char), '08b') for char in text)
 
-    def text_to_binary_64bits(self, text):
-        message_bin = self.text_to_bin(text)
+    def __text_to_binary_64bits(self, text):
+        message_bin = self.__text_to_bin(text)
 
         # Divide a mensagem em blocos de 64 bits
         blocks = [list(message_bin[i:i+64]) for i in range(0, len(message_bin), 64)]
@@ -22,27 +22,30 @@ class DES:
 
         return blocks
 
-    def permute(self, blocks, table):
+    def __permute(self, block, table):
         # Função de permutação de bits baseado em uma tabela
-        blocks_size = len(blocks)
+        permutation = [None] * 64
 
-        for block_index in range(blocks_size):
-            permutation = [None] * 64
+        for table_index in range(len(table)):
+            dest_index = table[table_index] - 1
+            permutation[table_index] = block[dest_index]
 
-            for table_index in range(len(table)):
-                dest_index = table[table_index] - 1
-                permutation[table_index] = blocks[block_index][dest_index]
+        return permutation
 
-            blocks[block_index] = permutation
-
-        return blocks
+    def __split_block(self, block):
+        # Divide o bloco em duas metades
+        return block[:32], block[32:]
 
     def encrypt(self, text, key=''):
         # Converte texto para blocos binários de 64 bits
-        blocks = self.text_to_binary_64bits(text)
+        blocks = self.__text_to_binary_64bits(text)
 
-        # Permutação inicial
-        permuted_blocks = self.permute(blocks, ip_table)
+        for block in blocks:
+            # Permutação inicial
+            permuted_block = self.__permute(block, ip_table)
+
+            # Divide bloco em esquerda e direita
+            left_side, right_side = self.__split_block(permuted_block)
 
         # Dividir o bloco em metades
         # left, right = self.split_bits(text)
