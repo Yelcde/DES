@@ -1,4 +1,4 @@
-from tables import ip_table, pc1_table, shift_schedule, pc2_table
+from tables import ip_table, pc1_table, shift_schedule, pc2_table, e_box_table
 
 
 class DES:
@@ -83,6 +83,37 @@ class DES:
 
         return subkeys
 
+    def __xor(self, expanded_right, subkey):
+        xored = ''.join('1' if expanded_right[i] != subkey[i] else '0' for i in range(48))
+        return xored
+
+    def __sbox_substitution(self, block):
+        # Aplica as S-Boxes nos blocos de 6 bits
+
+        # Divide o bloco em 8 blocos de 6 bits
+        for i in range(8):
+            six_bits = block[i*6:(i+1)*6]
+
+            row = int(six_bits[0] + six_bits[5], 2)  # Combina o primeiro e o último bit para a linha
+            col = int(six_bits[1:5], 2)  # Combina os bits do meio para a coluna
+            sbox_value = S_BOXES[i][row][col]  # Procura o valor na S-Box
+
+            output += self.__text_to_bin(sbox_value)  # Converte o valor de 4 bits para string binária
+
+        return output
+
+    def __function_f(self, right, subkey):
+        # Expansão do lado direito
+        expanded = self.__permute(right, e_box_table, 48)
+
+        # XOR com a subchave
+        xor_output = self.__xor(expanded, subkey)
+
+        # Substituição (S-Boxes)
+
+
+        # return permute(xor_output, permutation_table)
+
     def encrypt(self, text, key=''):
         # Converte texto para blocos binários de 64 bits
         blocks = self.__text_to_binary_blocks_64bits(text)
@@ -99,9 +130,6 @@ class DES:
 
             # Gerar subchaves
             subkeys = self.__generate_subkeys(''.join(key_bin))
-            for subkey in subkeys:
-                print(subkey)
-                print()
 
         # 16 rodadas de Feistel
         # for i in range(16):
