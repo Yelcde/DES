@@ -53,7 +53,6 @@ class DES:
         return bits[n_shifts:] + bits[:n_shifts]
 
     def __generate_subkeys(self, key):
-        print(key)
         # Gera as 16 subchaves de 48 bits a partir da chave de 64 bits
         
         # 1. Remove os bits de paridade para obter a chave de 56 bits
@@ -77,7 +76,7 @@ class DES:
 
             # 5. Junta C e D para formar 56 bits e aplica PC-2 para obter 48 bits
             combined = C + D
-            subkey = self.__permute(key, pc2_table, 48)
+            subkey = self.__permute(combined, pc2_table, 48)
 
             # Armazena a subchave
             subkeys.append(subkey)
