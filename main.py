@@ -4,8 +4,9 @@ des = DES()
 
 # Exemplo de uso
 # text = input("Escreva um caracter para criptografar: ")
-text = "A"
+key = 'B'
+plaintext = "A"
 
 # Criptografar
-ciphertext = des.encrypt(text)
+ciphertext = des.encrypt(plaintext, key)
 # print("Texto criptografado:", ciphertext)

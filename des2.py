@@ -17,16 +17,14 @@ class DES:
         last_block_size = len(last_block)
 
         if last_block_size < 64:
-            remaining_to_64 = 64 - last_block_size
-            last_block = last_block.ljust(remaining_to_64, '0')
+            last_block = last_block.ljust(64, '0')
             blocks[-1] = list(last_block)
 
         return blocks
 
-    def __permute(self, block, table):
+    def __permute(self, block, table, block_size = 64):
         # Função de permutação de bits baseado em uma tabela
-        permutation = [None] * 64
-
+        permutation = [None] * block_size
         for table_index in range(len(table)):
             dest_index = table[table_index] - 1
             permutation[table_index] = block[dest_index]
@@ -42,10 +40,9 @@ class DES:
         key_bin_size = len(key_bin)
 
         if key_bin_size < 64:
-            remaining_to_64 = 64 - key_bin_size
-            key_bin = key_bin.ljust(remaining_to_64, '0')
+            key_bin = key_bin.ljust(64, '0')
 
-        return key_bin
+        return list(key_bin)
 
     def encrypt(self, text, key=''):
         # Converte texto para blocos binários de 64 bits
