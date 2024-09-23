@@ -1,4 +1,4 @@
-from tables import ip_table
+from tables import ip_table, pc1_table, shift_schedule, pc2_table
 
 
 class DES:
@@ -44,6 +44,46 @@ class DES:
 
         return list(key_bin)
 
+    def __remove_parity_bits(self, key):
+        # Remove os bits de paridade e retorna uma chave de 56 bits
+        return ''.join([key[i] for i in range(len(key)) if (i + 1) % 8 != 0])
+
+    def __left_shift(self, bits, n_shifts):
+        # Executa uma rotação circular a esquerda
+        return bits[n_shifts:] + bits[:n_shifts]
+
+    def __generate_subkeys(self, key):
+        print(key)
+        # Gera as 16 subchaves de 48 bits a partir da chave de 64 bits
+        
+        # 1. Remove os bits de paridade para obter a chave de 56 bits
+        key_56_bits = self.__remove_parity_bits(key)
+
+        # 2. Aplica PC-1 à chave de 56 bits
+        key_56_bits = self.__permute(key, pc1_table, 56)
+
+        # Divide a chave de 56 bits em dois blocos de 28 bits
+        C = key_56_bits[:28]
+        D = key_56_bits[28:]
+
+        subkeys = []
+
+        # 3. Para cada rodada (16 no total), execute as operações:
+        for round_num in range(16):
+            # 4. Rotaciona os blocos C e D à esquerda com base na tabela de shifts
+            n_shifts = shift_schedule[round_num]
+            C = self.__left_shift(C, n_shifts)
+            D = self.__left_shift(D, n_shifts)
+
+            # 5. Junta C e D para formar 56 bits e aplica PC-2 para obter 48 bits
+            combined = C + D
+            subkey = self.__permute(key, pc2_table, 48)
+
+            # Armazena a subchave
+            subkeys.append(subkey)
+
+        return subkeys
+
     def encrypt(self, text, key=''):
         # Converte texto para blocos binários de 64 bits
         blocks = self.__text_to_binary_blocks_64bits(text)
@@ -58,8 +98,11 @@ class DES:
             # Divide bloco em esquerda e direita
             left_side, right_side = self.__split_block(permuted_block)
 
-        # Gerar subchaves
-        # subkeys = self;generate_subkeys(key)
+            # Gerar subchaves
+            subkeys = self.__generate_subkeys(''.join(key_bin))
+            for subkey in subkeys:
+                print(subkey)
+                print()
 
         # 16 rodadas de Feistel
         # for i in range(16):

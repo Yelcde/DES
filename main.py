@@ -4,7 +4,7 @@ des = DES()
 
 # Exemplo de uso
 # text = input("Escreva um caracter para criptografar: ")
-key = 'B'
+key = 'Bsdfd'
 plaintext = "A"
 
 # Criptografar
