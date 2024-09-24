@@ -1,10 +1,38 @@
-from tables import ip_table, pc1_table, shift_schedule, pc2_table, e_box_table
+from tables import *
 
 
 class DES:
-    def __text_to_bin(self, text):
+    def __decimal_to_binary(self, decimal):
+        if decimal == 0:
+            return '0'  # Retorna '0' se o número for zero
+        
+        binary = ''
+        
+        while decimal > 0:
+            bit = decimal % 2  # Obtém o bit menos significativo
+            binary = str(bit) + binary  # Adiciona o bit à frente da string
+            decimal //= 2  # Divide o decimal por 2 (desloca para a direita)
+        
+        if len(str(binary)) < 4:
+            binary = binary.rjust(4, '0')
+
+        return str(binary)
+
+
+    def __binary_to_decimal(self, binario):
+        decimal = 0
+        length = len(binario)
+        
+        for i in range(length):
+            # Converte cada dígito binário em decimal
+            bit = int(binario[length - 1 - i])  # Acessa os bits de trás para frente
+            decimal += bit * (2 ** i)  # Contribui para o total decimal
+        
+        return decimal
+
+    def __text_to_bin(self, text, bits='08b'):
         # Converte cada caractere em seu valor binário (8 bits para cada caractere)
-        return ''.join(format(ord(char), '08b') for char in text)
+        return ''.join(format(ord(char), bits) for char in text)
 
     def __text_to_binary_blocks_64bits(self, text):
         message_bin = self.__text_to_bin(text)
@@ -90,35 +118,53 @@ class DES:
         return subkeys
 
     def __xor(self, expanded_right, subkey):
-        xored = ''.join('1' if expanded_right[i] != subkey[i] else '0' for i in range(48))
+        xored = ''
+
+        for bit in range(48):
+            if expanded_right[bit] == subkey[bit]:
+                xored += '0'
+            else: 
+                xored += '1'
+
         return xored
 
-    def __sbox_substitution(self, block):
-        # Aplica as S-Boxes nos blocos de 6 bits
+    def __sbox_substitution(self, sBox_entrance):
+        sBox_chosen = 0
+        replacement = ''
+        for entrance in sBox_entrance:
+            linha = entrance[0] + entrance[-1]
+            linha = self.__binary_to_decimal(linha)
+            coluna = self.__binary_to_decimal(''.join(entrance[1:5]))
 
-        # Divide o bloco em 8 blocos de 6 bits
-        for i in range(8):
-            six_bits = block[i*6:(i+1)*6]
+            sBox_number = s_boxes[sBox_chosen][linha][coluna]
 
-            row = int(six_bits[0] + six_bits[5], 2)  # Combina o primeiro e o último bit para a linha
-            col = int(six_bits[1:5], 2)  # Combina os bits do meio para a coluna
-            sbox_value = S_BOXES[i][row][col]  # Procura o valor na S-Box
+            replacement += self.__decimal_to_binary(sBox_number)
 
-            output += self.__text_to_bin(sbox_value)  # Converte o valor de 4 bits para string binária
+            sBox_chosen += 1
 
-        return output
+        return replacement
 
-    def __function_f(self, right, subkey):
+    def __function_f(self, right_side, subkey):
         # Expansão do lado direito
-        expanded = self.__permute(right, e_box_table, 48)
+        expanded_right_side = self.__permute(right_side, e_box_table, 48)
 
         # XOR com a subchave
-        xor_output = self.__xor(expanded, subkey)
+        xor = self.__xor(expanded_right_side, subkey)
 
         # Substituição (S-Boxes)
+        sBox_entrance = []
 
+        for i in range(0, len(xor), 6): # Separando XOR em grupos de 6
+            entrance = list(xor[i:i+6])
+            sBox_entrance.append(entrance)
+        
+        # Fazendo substituição com s_boxes
+        replacement = self.__sbox_substitution(sBox_entrance)
 
-        # return permute(xor_output, permutation_table)
+        # Permutando depois de fazer a substituição
+        replacement_permuted = self.__permute(replacement, e_box_table, 32)
+
+        return replacement_permuted
 
     def encrypt(self, text, key=''):
         # Converte texto para blocos binários de 64 bits
@@ -136,6 +182,14 @@ class DES:
 
             # Gerar subchaves
             subkeys = self.__generate_subkeys(''.join(key_bin))
+
+            for key in subkeys:
+                expanded_right_side = self.__function_f(right_side, key)
+
+                xor = self.__xor(left_side, expanded_right_side)
+                
+                right_side = left_side
+                left_side = xor
 
         # 16 rodadas de Feistel
         # for i in range(16):
