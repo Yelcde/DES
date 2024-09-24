@@ -45,8 +45,13 @@ class DES:
         return list(key_bin)
 
     def __remove_parity_bits(self, key):
-        # Remove os bits de paridade e retorna uma chave de 56 bits
-        return ''.join([key[i] for i in range(len(key)) if (i + 1) % 8 != 0])
+        key_56_bits = ''
+    
+        for i in range(0, len(key), 8):
+            # Pega os primeiros 7 bits de cada bloco de 8 bits e os adiciona à chave de 56 bits
+            key_56_bits += key[i:i+7]  # Pega os 7 primeiros bits (descarta o 8º bit)
+        
+        return list(key_56_bits)
 
     def __left_shift(self, bits, n_shifts):
         # Executa uma rotação circular a esquerda
@@ -60,6 +65,7 @@ class DES:
 
         # 2. Aplica PC-1 à chave de 56 bits
         key_56_bits = self.__permute(key, pc1_table, 56)
+
 
         # Divide a chave de 56 bits em dois blocos de 28 bits
         C = key_56_bits[:28]

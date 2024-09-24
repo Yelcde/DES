@@ -36,7 +36,7 @@ class DES:
     def function_f(self, right, subkey):
         # Função Feistel F simplificada (expansão, substituição e permutação)
         # Expansão do lado direito (simplificado aqui)
-        expanded = permute(right, expansion_table)
+        expanded = self.permute(right, expansion_table)
         # XOR com a subchave
         xor_output = xor(expanded, subkey)
         # Substituição (S-Boxes) omitida aqui por simplicidade
