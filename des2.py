@@ -4,7 +4,7 @@ from tables import *
 class DES:
     def __decimal_to_binary(self, decimal):
         if decimal == 0:
-            return '0'  # Retorna '0' se o número for zero
+            return '0000'  # Retorna '0' se o número for zero
         
         binary = ''
         
@@ -53,6 +53,7 @@ class DES:
     def __permute(self, block, table, block_size = 64):
         # Função de permutação de bits baseado em uma tabela
         permutation = [None] * block_size
+        print(len(block))
         for table_index in range(len(table)):
             dest_index = table[table_index] - 1
             permutation[table_index] = block[dest_index]
@@ -117,10 +118,10 @@ class DES:
 
         return subkeys
 
-    def __xor(self, expanded_right, subkey):
+    def __xor(self, expanded_right, subkey, len_range=48):
         xored = ''
 
-        for bit in range(48):
+        for bit in range(len_range):
             if expanded_right[bit] == subkey[bit]:
                 xored += '0'
             else: 
@@ -162,7 +163,7 @@ class DES:
         replacement = self.__sbox_substitution(sBox_entrance)
 
         # Permutando depois de fazer a substituição
-        replacement_permuted = self.__permute(replacement, e_box_table, 32)
+        replacement_permuted = self.__permute(replacement, p_box_table, 32)
 
         return replacement_permuted
 
@@ -186,7 +187,7 @@ class DES:
             for key in subkeys:
                 expanded_right_side = self.__function_f(right_side, key)
 
-                xor = self.__xor(left_side, expanded_right_side)
+                xor = self.__xor(left_side, expanded_right_side, 32)
                 
                 right_side = left_side
                 left_side = xor
