@@ -53,7 +53,7 @@ class DES:
     def __permute(self, block, table, block_size = 64):
         # Função de permutação de bits baseado em uma tabela
         permutation = [None] * block_size
-        print(len(block))
+
         for table_index in range(len(table)):
             dest_index = table[table_index] - 1
             permutation[table_index] = block[dest_index]
@@ -174,12 +174,12 @@ class DES:
         # Converte chave de criptografia para binário
         key_bin = self.__proccess_key(key)
 
-        for block in blocks:
+        for block_id in range(len(blocks)):
             # Permutação inicial
-            permuted_block = self.__permute(block, ip_table)
+            permuted_block = self.__permute(blocks[block_id], ip_table)
 
             # Divide bloco em esquerda e direita
-            left_side, right_side = self.__split_block(permuted_block)
+            right_side, left_side = self.__split_block(permuted_block)
 
             # Gerar subchaves
             subkeys = self.__generate_subkeys(''.join(key_bin))
@@ -191,6 +191,12 @@ class DES:
                 
                 right_side = left_side
                 left_side = xor
+            
+            # Combinando right_side e left_side
+            blocks[block_id] = right_side + left_side
+
+            # Permutação Inversa
+            blocks[block_id] = self.__permute(blocks[block_id], ip_inverse_table)
 
         # 16 rodadas de Feistel
         # for i in range(16):
