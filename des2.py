@@ -34,11 +34,9 @@ class DES:
         # Converte cada caractere em seu valor binário (8 bits para cada caractere)
         return ''.join(format(ord(char), bits) for char in text)
 
-    def __text_to_binary_blocks_64bits(self, text):
-        message_bin = self.__text_to_bin(text)
-
+    def __to_64_bits(self, text):
         # Divide a mensagem em blocos de 64 bits
-        blocks = [list(message_bin[i:i+64]) for i in range(0, len(message_bin), 64)]
+        blocks = [list(text[i:i+64]) for i in range(0, len(text), 64)]
 
         # Verifica se o último bloco tem menos de 64 bits e adiciona padding se necessário
         last_block = ''.join(blocks[-1])
@@ -49,6 +47,15 @@ class DES:
             blocks[-1] = list(last_block)
 
         return blocks
+    
+    def __binary_to_text(self, binary_string):
+        # Divide a string binária em blocos de 8 bits
+        chars = [binary_string[i:i+8] for i in range(0, len(binary_string), 8)]
+        
+        # Converte cada bloco de 8 bits em um caractere ASCII
+        text = ''.join([chr(int(char, 2)) for char in chars])
+        
+        return text
 
     def __permute(self, block, table, block_size = 64):
         # Função de permutação de bits baseado em uma tabela
@@ -166,10 +173,20 @@ class DES:
         replacement_permuted = self.__permute(replacement, p_box_table, 32)
 
         return replacement_permuted
+    
+    # Mostrando texto encriptado
+    def binary_to_text(self, binary):
+        return self.__binary_to_text(binary)
 
+    # Encriptografia
     def encrypt(self, text, key=''):
+        encrypted_block = ''
+
         # Converte texto para blocos binários de 64 bits
-        blocks = self.__text_to_binary_blocks_64bits(text)
+        blocks = self.__text_to_bin(text)
+
+        # Divisão em blocos de 64
+        blocks = self.__to_64_bits(blocks)
 
         # Converte chave de criptografia para binário
         key_bin = self.__proccess_key(key)
@@ -196,18 +213,43 @@ class DES:
             blocks[block_id] = right_side + left_side
 
             # Permutação Inversa
-            blocks[block_id] = self.__permute(blocks[block_id], ip_inverse_table)
+            encrypted_block += ''.join(self.__permute(blocks[block_id], ip_inverse_table))
+            
+        return encrypted_block
 
-        # 16 rodadas de Feistel
-        # for i in range(16):
-        #     new_right = self;xor(left, self.function_f(right, subkeys[i]))
-        #     left = right
-        #     right = new_right
+    # Descriptografia
+    def decrypt(self, text, key=''):
+        decrypted_block = ''
 
-        # Combinar as metades (esquerda e direita)
-        # combined_block = right + left # Swap final das metades
+        # Divisão em blocos de 64
+        blocks = self.__to_64_bits(text)
 
-        # Permutação final
-        # encrypted_block = self.permute(combined_block, final_permutation)
+        # Converte chave de criptografia para binário
+        key_bin = self.__proccess_key(key)
 
-        # return encrypted_block
+        for block_id in range(len(blocks)):
+            # Permutação Inversa
+            permuted_inverse = self.__permute(blocks[block_id], ip_inverse_table)
+
+            # Divide bloco em esquerda e direita
+            right_side, left_side = self.__split_block(permuted_inverse)
+
+            # Gerar subchaves
+            subkeys = self.__generate_subkeys(''.join(key_bin))
+
+            for key in reversed(subkeys):
+                expanded_right_side = self.__function_f(right_side, key)
+
+                xor = self.__xor(left_side, expanded_right_side, 32)
+                
+                left_side = right_side
+                right_side = xor
+
+            # Combinando right_side e left_side
+            blocks[block_id] = left_side + right_side
+
+            # Permutação Inicial
+            decrypted_block += ''.join(self.__permute(blocks[block_id], ip_table))
+        
+            
+        return decrypted_block
